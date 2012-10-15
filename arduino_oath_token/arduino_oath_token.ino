@@ -1,6 +1,9 @@
 #include <LiquidCrystal.h>
 #include "sha1.h"
+#include <Wire.h>
+#include "RTClib.h"
 
+RTC_DS1307 RTC;
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 void printHash(uint8_t* hash) {
@@ -11,11 +14,12 @@ void printHash(uint8_t* hash) {
 
 uint8_t hmacKey1[]={ 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21, 0xde, 0xad, 0xbe, 0xef, 0x6f, 0x21, 0xde, 0xad, 0xbe, 0xef };
 
-long birthTime = 1339345870;
 long intern = 0;
 long oldOtp = 0;
 
 void setup() {
+  Wire.begin();
+  RTC.begin();
   Serial.begin(9600);
   lcd.begin(16, 2);
   lcd.setCursor(0, 0);
@@ -25,6 +29,9 @@ void setup() {
 int wait = 0;
 
 void loop() {
+
+  DateTime now = RTC.now();
+  long birthTime = (now.unixtime()-14400); // RTC_DS1307 'NOW' in GMT+4, converting to GMT
   
   if(intern == 0) intern = birthTime;
   else{
@@ -43,8 +50,8 @@ void loop() {
   
    uint8_t* hash;
    uint32_t a; 
-   Sha1.initHmac(hmacKey1,16);
-   Sha1.writebytes(byteArray, 8);
+   Sha1.initHmac(hmacKey1, sizeof(hmacKey1));
+   Sha1.writebytes(byteArray, sizeof(byteArray));
    hash = Sha1.resultHmac();
   
    int  offset = hash[20 - 1] & 0xF; 
