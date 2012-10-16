@@ -14,7 +14,6 @@ void printHash(uint8_t* hash) {
 
 uint8_t hmacKey1[]={ 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21, 0xde, 0xad, 0xbe, 0xef, 0x6f, 0x21, 0xde, 0xad, 0xbe, 0xef };
 
-long intern = 0;
 long oldOtp = 0;
 
 void setup() {
@@ -31,42 +30,39 @@ int wait = 0;
 void loop() {
 
   DateTime now = RTC.now();
-  long birthTime = (now.unixtime()-14400); // RTC_DS1307 'NOW' in GMT+4, converting to GMT
+  long GMT = (now.unixtime()-14400); // RTC_DS1307 'NOW' in GMT+4, converting to GMT
   
-  if(intern == 0) intern = birthTime;
-  else{
-  
-   uint8_t byteArray[8];   
-   long time = intern / 30;
+  uint8_t byteArray[8];   
+  long time = GMT / 30;
               
-   byteArray[0] = 0x00;
-   byteArray[1] = 0x00;
-   byteArray[2] = 0x00;
-   byteArray[3] = 0x00;
-   byteArray[4] = (int)((time >> 24) & 0xFF) ;
-   byteArray[5] = (int)((time >> 16) & 0xFF) ;
-   byteArray[6] = (int)((time >> 8) & 0XFF);
-   byteArray[7] = (int)((time & 0XFF));
+  byteArray[0] = 0x00;
+  byteArray[1] = 0x00;
+  byteArray[2] = 0x00;
+  byteArray[3] = 0x00;
+  byteArray[4] = (int)((time >> 24) & 0xFF) ;
+  byteArray[5] = (int)((time >> 16) & 0xFF) ;
+  byteArray[6] = (int)((time >> 8) & 0XFF);
+  byteArray[7] = (int)((time & 0XFF));
   
-   uint8_t* hash;
-   uint32_t a; 
-   Sha1.initHmac(hmacKey1, sizeof(hmacKey1));
-   Sha1.writebytes(byteArray, sizeof(byteArray));
-   hash = Sha1.resultHmac();
+  uint8_t* hash;
+  uint32_t a; 
+  Sha1.initHmac(hmacKey1, sizeof(hmacKey1));
+  Sha1.writebytes(byteArray, sizeof(byteArray));
+  hash = Sha1.resultHmac();
   
-   int  offset = hash[20 - 1] & 0xF; 
-   long truncatedHash = 0;
-   int j;
-   for (j = 0; j < 4; ++j) {
+  int  offset = hash[20 - 1] & 0xF; 
+  long truncatedHash = 0;
+  int j;
+  for (j = 0; j < 4; ++j) {
     truncatedHash <<= 8;
     truncatedHash  |= hash[offset + j];
-   }
+  }
     
-   truncatedHash &= 0x7FFFFFFF;
-   truncatedHash %= 1000000;
+  truncatedHash &= 0x7FFFFFFF;
+  truncatedHash %= 1000000;
   
   
-   if(truncatedHash != oldOtp){
+  if(truncatedHash != oldOtp){
     oldOtp = truncatedHash;
     wait = 0;
     Serial.println(truncatedHash);
@@ -74,19 +70,12 @@ void loop() {
     lcd.print(truncatedHash);
     lcd.setCursor(0, 1);
     lcd.print("                ");
-   }else wait++;
+  }else wait++;
    
-   if(wait % 2 == 0){
+  if(wait % 2 == 0){
+    lcd.setCursor(wait/2, 1);
+    lcd.print("*");
+  } 
    
-     lcd.setCursor(wait/2, 1);
-     lcd.print("*");
-   
-   } 
-   
-   delay(1000);
-   intern++;
-   
-  }
-  
-  
+  delay(1000);
 }
