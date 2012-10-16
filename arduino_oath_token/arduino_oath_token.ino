@@ -64,18 +64,26 @@ void loop() {
   
   if(truncatedHash != oldOtp){
     oldOtp = truncatedHash;
-    wait = 0;
+    wait = 48;
     Serial.println(truncatedHash);
     lcd.setCursor(5, 0);
     lcd.print(truncatedHash);
     lcd.setCursor(0, 1);
-    lcd.print("                ");
-  }else wait++;
-   
-  if(wait % 2 == 0){
-    lcd.setCursor(wait/2, 1);
-    lcd.print("*");
-  } 
-   
-  delay(1000);
+    lcd.print("\x83\x83\x83\x83\x83\x83\x83\x83\x83\x83\x83\x83\x83\x83\x83\x83");
+  } else wait--;
+  
+  if(wait % 3 == 0){
+    lcd.setCursor(wait/3, 1);
+    lcd.print("\x80");
+  }
+  if((wait+1) % 3 == 0){
+    lcd.setCursor(wait/3, 1);
+    lcd.print("\x82");
+  }
+  if((wait+2) % 3 == 0){
+    lcd.setCursor(wait/3, 1);
+    lcd.print("\x81");
+  }
+  
+  delay(610);
 }
